@@ -1,3 +1,4 @@
+import javax.sound.sampled.Line;
 import java.util.Scanner;
 
 public class TicTacToe {
@@ -27,7 +28,6 @@ public class TicTacToe {
         return row >= 0 && row < SIZE && col >= 0 && col < SIZE && board[row][col] == EMPTY;
     }
 
-    // Method to make a move
     void makeMove(int row, int col, char player) {
         if (isValidMove(row, col)) {
             board[row][col] = player;
@@ -35,7 +35,6 @@ public class TicTacToe {
         }
     }
 
-    // Method to check if the game is over
     boolean isGameOver() {
         return isWin(PLAYER_X) || isWin(PLAYER_O) || isDraw();
     }
@@ -72,35 +71,37 @@ public class TicTacToe {
         return true;
     }
 
-    //////////////////////////////////
-    // Minimax algorithm with alpha-beta pruning
     int[] minimaxAlphaBeta(char[][] board, int depth, int alpha, int beta, boolean maximizingPlayer) {
-        if (isWin(PLAYER_O)) {
-            // Assign a very high score to encourage this move
-            return new int[] {Integer.MAX_VALUE, -1, -1}; // Assuming MAX_SCORE is a large positive value
-        }
-
-        if (isWin(PLAYER_X)) {
-            // Assign a very low score to avoid this move
-            return new int[] {Integer.MIN_VALUE, -1, -1}; // Assuming MIN_SCORE is a large negative value
-        }
-
-        if (depth >= 2 || isGameOver()) {
-            return new int[] {evaluate(board), -1, -1}; // Evaluate current board state
+        //Node is leaf
+        if (depth >= 3 || isGameOver()) {
+            return new int[] {evaluate(board)};
         }
 
         int bestScore;
         int[] bestMove = new int[] {-1, -1};
 
+        //node is max
         if (maximizingPlayer) {
             bestScore = Integer.MIN_VALUE;
             for (int i = 0; i < SIZE; i++) {
                 for (int j = 0; j < SIZE; j++) {
                     if (board[i][j] == EMPTY) {
-                        board[i][j] = PLAYER_X;
-                        if (!aiMoveLeadsToLoss(board, i, j)) { // Check if AI's move leads to a loss
+                        board[i][j] = PLAYER_O;
+                        if (isWin(PLAYER_O)) {
+                            bestScore = Integer.MAX_VALUE;
+                            bestMove[0] = i;
+                            bestMove[1] = j;
+                            board[i][j] = EMPTY;
+                            break;
+                        } else if (aiMoveLeadsToLoss(board, i, j)) {
+                            if (Integer.MIN_VALUE > bestScore) {
+                                bestScore = Integer.MIN_VALUE;
+                                bestMove[0] = i;
+                                bestMove[1] = j;
+                            }
+                            board[i][j] = EMPTY;
+                        } else {
                             int[] score = minimaxAlphaBeta(board, depth + 1, alpha, beta, false);
-                            System.out.println("score 0: " + score[0]);
                             if (score[0] > bestScore) {
                                 bestScore = score[0];
                                 bestMove[0] = i;
@@ -108,14 +109,15 @@ public class TicTacToe {
                             }
                             alpha = Math.max(alpha, bestScore);
                             if (beta <= alpha) {
-                                board[i][j] = EMPTY; // Reset board
-                                break; // Beta cutoff
+                                board[i][j] = EMPTY;
+                                break;
                             }
                         }
-                        board[i][j] = EMPTY; // Reset board
+                        board[i][j] = EMPTY;
                     }
                 }
             }
+        //node is min
         } else {
             bestScore = Integer.MAX_VALUE;
             for (int i = 0; i < SIZE; i++) {
@@ -143,8 +145,6 @@ public class TicTacToe {
     int evaluate(char[][] board) {
         int aiScore = 0;
         int opponentScore = 0;
-
-        // Calculate score based on field values
         for (int i = 0; i < SIZE; i++) {
             for (int j = 0; j < SIZE; j++) {
                 if (board[i][j] == PLAYER_O) {
@@ -154,57 +154,37 @@ public class TicTacToe {
                 }
             }
         }
-        //System.out.println("player: " + opponentScore);
-
-        // Return the difference between AI's score and opponent's score
-        System.out.println("AI score: " + aiScore);
-        System.out.println("Player score: " + opponentScore);
-        printBoard();
         return aiScore - opponentScore;
     }
 
     boolean aiMoveLeadsToLoss(char[][] board, int row, int col) {
-        // Simulate AI's move
-        board[row][col] = PLAYER_O;
-
-        // Check opponent's possible moves after AI's move
         for (int i = 0; i < SIZE; i++) {
             for (int j = 0; j < SIZE; j++) {
                 if (board[i][j] == EMPTY) {
-                    // Simulate opponent's move
                     board[i][j] = PLAYER_X;
-
-                    // Check if opponent wins after this move
                     if (isWin(PLAYER_X)) {
-                        // Reset the board to its original state
-                        board[i][j] = EMPTY;
-                        board[row][col] = EMPTY;
-                        return true; // AI's move can lead to a loss
-                    }
 
-                    // Reset the board for the next simulation
+                        board[i][j] = EMPTY;
+                        return true;
+                    }
                     board[i][j] = EMPTY;
                 }
             }
         }
-
-        // Reset the board to its original state
-        board[row][col] = EMPTY;
-
-        return false; // AI's move does not lead to a loss
+        return false;
     }
-    //////////////////////////////////
 
     void printBoard() {
         System.out.print("\033[H\033[2J");
         System.out.flush();
-        String boardString = "#######" + "\n" +
-                "#" + board[0][0] + "#" + board[0][1] + "#" + board[0][2] + "#" + "\n" +
-                "#######" + "\n" +
-                "#" + board[1][0] + "#" + board[1][1] + "#" + board[1][2] + "#" + "\n" +
-                "#######" + "\n" +
-                "#" + board[2][0] + "#" + board[2][1] + "#" + board[2][2] + "#" + "\n" +
-                "#######" + "\n";
+        String boardString =
+                "_______\n" +
+                "|" + board[0][0] + "|" + board[0][1] + "|" + board[0][2] + "|\n" +
+                "|-----|\n" +
+                "|" + board[1][0] + "|" + board[1][1] + "|" + board[1][2] + "|\n" +
+                "|-----|\n" +
+                "|" + board[2][0] + "|" + board[2][1] + "|" + board[2][2] + "|\n" +
+                "-------\n";
         System.out.println(boardString);
     }
 
@@ -231,12 +211,15 @@ public class TicTacToe {
     }
 
     void aiMove() {
-        int[] bestMove = minimaxAlphaBeta(board, 0, Integer.MIN_VALUE, Integer.MAX_VALUE, false);
-        System.out.println(bestMove[0] + " : (" + bestMove[1] + ", " + bestMove[2] + ")");
+        int[] bestMove = minimaxAlphaBeta(board, 0, Integer.MIN_VALUE, Integer.MAX_VALUE, true);
+        System.out.println("best AI move score: " + bestMove[0]);
+        System.out.println("best AI move: (" + bestMove[1] + ", " + bestMove[2] + ")");
         makeMove(bestMove[1], bestMove[2], TicTacToe.PLAYER_O);
     }
 
     void resetGame() {
+        System.out.println();
+        System.out.println("Starting new Game");
         setupBoard();
         run();
     }
@@ -248,14 +231,12 @@ public class TicTacToe {
             if (isGameOver()) {
                 break;
             }
-            this.printBoard();
             aiMove();
             if (isGameOver()) {
                 break;
             }
         }
 
-        // Display the final state of the board and the outcome
         printBoard();
         displayOutcome();
         resetGame();
