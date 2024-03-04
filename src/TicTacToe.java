@@ -73,7 +73,7 @@ public class TicTacToe {
 
     int[] minimaxAlphaBeta(char[][] board, int depth, int alpha, int beta, boolean maximizingPlayer) {
         //Node is leaf
-        if (depth >= 3 || isGameOver()) {
+        if (depth >= 5 || isGameOver()) {
             return new int[] {evaluate(board)};
         }
 
@@ -81,7 +81,7 @@ public class TicTacToe {
         int[] bestMove = new int[] {-1, -1};
 
         //node is max
-        if (maximizingPlayer) {
+         if (maximizingPlayer) {
             bestScore = Integer.MIN_VALUE;
             for (int i = 0; i < SIZE; i++) {
                 for (int j = 0; j < SIZE; j++) {
@@ -93,25 +93,28 @@ public class TicTacToe {
                             bestMove[1] = j;
                             board[i][j] = EMPTY;
                             break;
-                        } else if (aiMoveLeadsToLoss(board, i, j)) {
-                            if (Integer.MIN_VALUE > bestScore) {
-                                bestScore = Integer.MIN_VALUE;
-                                bestMove[0] = i;
-                                bestMove[1] = j;
-                            }
-                            board[i][j] = EMPTY;
                         } else {
                             int[] score = minimaxAlphaBeta(board, depth + 1, alpha, beta, false);
-                            if (score[0] > bestScore) {
-                                bestScore = score[0];
-                                bestMove[0] = i;
-                                bestMove[1] = j;
+                            if (aiMoveLeadsToLoss(board, i, j)) {
+                                if (score[0] > bestScore) {
+                                    bestScore = score[0];
+                                    bestMove[0] = i;
+                                    bestMove[1] = j;
+                                }
+                            } else {
+                                score[0]+=2;
+                                if (score[0]> bestScore) {
+                                    bestScore = score[0];
+                                    bestMove[0] = i;
+                                    bestMove[1] = j;
+                                }
                             }
                             alpha = Math.max(alpha, bestScore);
                             if (beta <= alpha) {
                                 board[i][j] = EMPTY;
                                 break;
                             }
+                            board[i][j] = EMPTY;
                         }
                         board[i][j] = EMPTY;
                     }
@@ -123,7 +126,7 @@ public class TicTacToe {
             for (int i = 0; i < SIZE; i++) {
                 for (int j = 0; j < SIZE; j++) {
                     if (board[i][j] == EMPTY) {
-                        board[i][j] = PLAYER_O;
+                        board[i][j] = PLAYER_X;
                         int[] score = minimaxAlphaBeta(board, depth + 1, alpha, beta, true);
                         board[i][j] = EMPTY;
                         if (score[0] < bestScore) {
@@ -163,7 +166,6 @@ public class TicTacToe {
                 if (board[i][j] == EMPTY) {
                     board[i][j] = PLAYER_X;
                     if (isWin(PLAYER_X)) {
-
                         board[i][j] = EMPTY;
                         return true;
                     }
