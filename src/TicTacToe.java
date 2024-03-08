@@ -73,7 +73,7 @@ public class TicTacToe {
 
     int[] minimaxAlphaBeta(char[][] board, int depth, int alpha, int beta, boolean maximizingPlayer) {
         //Node is leaf
-        if (depth >= 1 || isGameOver()) {
+        if (depth >= 5 || isGameOver()) {
             return new int[] {evaluate(board)};
         }
 
@@ -95,24 +95,17 @@ public class TicTacToe {
                             break;
                         } else {
                             int[] score;
-                            if (depth == 0) {
-                                score = minimaxAlphaBeta(board, depth + 1, alpha, beta, false);
-                            } else {
+                            if (depth != 0) {
                                 score = minimaxAlphaBeta(board, depth - 1, alpha, beta, false);
                             }
-                            if (aiMoveLeadsToLoss(board, i, j)) {
-                                if (score[0] > bestScore) {
-                                    bestScore = score[0];
-                                    bestMove[0] = i;
-                                    bestMove[1] = j;
-                                }
-                            } else {
-                                score[0] += 2;
-                                if (score[0] > bestScore) {
-                                    bestScore = score[0];
-                                    bestMove[0] = i;
-                                    bestMove[1] = j;
-                                }
+                            score = minimaxAlphaBeta(board, depth + 1, alpha, beta, false);
+                            if (!aiMoveLeadsToLoss(board, i, j)) {
+                                score[0] += 24;
+                            }
+                            if (score[0] > bestScore) {
+                                bestScore = score[0];
+                                bestMove[0] = i;
+                                bestMove[1] = j;
                             }
                             alpha = Math.max(alpha, bestScore);
                             if (beta <= alpha) {
